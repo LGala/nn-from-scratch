@@ -10,7 +10,7 @@ def relu_output(values):
 
 
 # non-negative (thanks to exp) and normalized (scores sums up to 1) confidence score
-# normalization (normalized_exp_output) prevent big values to overflow when exp
+# first normalization (normalized_values) prevent big values to overflow when exp
 # the more one of the confidence score is higher respect to others and more that final confidence score is near 1
 def softmax_output(values):
     normalized_values = np.exp(values - np.max(values, axis=1, keepdims=True))
