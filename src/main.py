@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import nnfs
 import numpy as np
 
@@ -32,7 +31,7 @@ def softmax_output(values):
     return normalized_values / np.sum(normalized_values, axis=1, keepdims=True)
 
 
-def categorical_cross_entropy_loss_function_mean_output(confidence_scores, actual_categories: np.ndarray):
+def categorical_cross_entropy_loss_function_mean(confidence_scores, actual_categories: np.ndarray):
     # in order to prevent log(0) (that will result in -inf) if some confidence scores == 0
     clipped_confidence_scores = np.clip(confidence_scores, 1e-7, 1 - 1e-7)
     # this is a simple math trick to simplify the loss function calculation, example:
@@ -41,8 +40,13 @@ def categorical_cross_entropy_loss_function_mean_output(confidence_scores, actua
     #   - the loss function full formula should be -sum(log(.1) * 0 + log(.2) * 0 + log(.7) * 1) which is the same
     #     of -sum(log(.7) * 1) which is the same of using the actual_categories index to select the non-zero
     #     confidences_score, basically: -sum([[.1, .2, .7]][0][2]) which is the same of the below expression
-    loss_functions = - np.log(clipped_confidence_scores[[range(len(clipped_confidence_scores))], actual_categories])
-    return np.mean(loss_functions)
+    losses = - np.log(clipped_confidence_scores[[range(len(clipped_confidence_scores))], actual_categories])
+    return np.mean(losses)
+
+
+def accuracy(confidence_scores, actual_categories):
+    predicted_class = np.argmax(confidence_scores, axis=1)
+    return np.mean(predicted_class == actual_categories)
 
 
 if __name__ == '__main__':
@@ -51,9 +55,11 @@ if __name__ == '__main__':
 
     first_layer_output = dense_layer_output(X, *dense_layer(2, 3), relu_output)
     second_layer_output = dense_layer_output(first_layer_output, *dense_layer(3, 3), softmax_output)
-    loss_function_output = categorical_cross_entropy_loss_function_mean_output(second_layer_output, y)
 
-    print(loss_function_output)
+    loss_mean = categorical_cross_entropy_loss_function_mean(second_layer_output, y)
+    accuracy = accuracy(second_layer_output, y)
+
+    print(accuracy)
 
     # plt.scatter(X[:, 0], X[:, 1])
     # plt.show()
