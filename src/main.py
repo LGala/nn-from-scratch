@@ -4,25 +4,23 @@ import numpy as np
 from nnfs.datasets import spiral_data
 
 
-# each input is linked to each neuron/output (https://epynn.net/_images/Dense-01.svg)
-def dense_layer(inputs_count, outputs_count):
-    weights = .01 * np.random.randn(inputs_count, outputs_count)
-    biases = np.zeros((1, outputs_count))
+class DenseLayer:
+    def __init__(self, inputs_count, outputs_count):
+        self.output = None
+        self.weights = .01 * np.random.randn(inputs_count, outputs_count)
+        self.biases = np.zeros((1, outputs_count))
 
-    return weights, biases
-
-
-def dense_layer_output(inputs, weights, biases, activation_function=lambda x: x):
-    return activation_function(np.dot(inputs, weights) + biases)
+    def forward(self, inputs):
+        self.output = np.dot(inputs, self.weights) + self.biases
 
 
-# more of this can "describe" non-linear function
-def relu_output(values):
+# more of this can "describe" non-linear functions
+def relu(values):
     return np.maximum(0, values)
 
 
 # non-negative and normalized (sum up to 1) confidence score
-def softmax_output(values):
+def softmax(values):
     # used to prevent big values to overflow and to make negative values positives
     normalized_values = np.exp(values - np.max(values, axis=1, keepdims=True))
     # the following expression has 2 functions:
@@ -53,11 +51,16 @@ if __name__ == '__main__':
     nnfs.init()
     X, y = spiral_data(samples=100, classes=3)
 
-    first_layer_output = dense_layer_output(X, *dense_layer(2, 3), relu_output)
-    second_layer_output = dense_layer_output(first_layer_output, *dense_layer(3, 3), softmax_output)
+    layer_1, layer_2 = DenseLayer(2, 3), DenseLayer(3, 3)
 
-    loss_mean = categorical_cross_entropy_loss_function_mean(second_layer_output, y)
-    accuracy = accuracy(second_layer_output, y)
+    layer_1.forward(X)
+    relu_1_output = relu(layer_1.output)
+
+    layer_2.forward(relu_1_output)
+    softmax_1_output = softmax(layer_2.output)
+
+    loss_mean = categorical_cross_entropy_loss_function_mean(softmax_1_output, y)
+    accuracy = accuracy(softmax_1_output, y)
 
     print(accuracy)
 
